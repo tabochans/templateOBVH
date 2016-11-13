@@ -745,13 +745,11 @@ namespace mSec{
 	template<typename E>template<typename K>
 	int OBVH<E>::PGetElement(const K& key, ::std::vector<E>& result, int PID)const{
 
-
-
 		if (m_NArray[PID]._NumChildren == 0){
 
 			for (int i = 0; i < m_NArray[PID]._Elements.size(); i++){
 
-				Vertex* vv = m_NArray[PID]._Elements[i];
+				E* vv = m_NArray[PID]._Elements[i];
 				if (Isc::Intersect(key, *(vv))){
 					result.push_back(*vv);
 				}

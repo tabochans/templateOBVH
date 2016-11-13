@@ -550,69 +550,101 @@ namespace Isc{
 
 
 	template<>
-	bool Intersect(const Primitive::Sphere& s, const Primitive::Polygon& p, float& d, float& u, float& v){
-
-		//Vec3 N = (0.3333 * (facet.GetNormal(0) + facet.GetNormal(1) + facet.GetNormal(2))).normalized();
-		//Vec3 p = facet.GetPos(1) - facet.GetPos(0);
-		//Vec3 q = facet.GetPos(2) - facet.GetPos(0);
-
-		//Eigen::Matrix3f mat;
-
-		//mat << -N.x(), -N.y(), -N.z(), p.x(), p.y(), p.z(), q.x(), q.y(), q.z();
-
-		//mat.inverse();
-		//Eigen::Vector3f pq = Eigen::Vector3f(
-		//	CPos[0] - facet.GetPos(0)[0],
-		//	CPos[1] - facet.GetPos(0)[1],
-		//	CPos[2] - facet.GetPos(0)[2]);
-
-		//Eigen::Vector3f x = mat * pq;
-
-		//if (x[0] <= R && x[1] >= 0.0f && x[2] >= 0.0f && x[1] + x[2] <= 1.0f){
+	bool Intersect(const Primitive::Sphere& s, const Primitive::Polygon& PL){
+		//if ((s.m_Pos - PL.GetCenter()).norm2() < s.m_Radius * s.m_Radius){
 		//	return true;
 		//}
-		//else if ((CPos - facet.GetPos(2)).norm() <= R){
-		//	return true;
-		//}
-		//else if ((CPos - facet.GetPos(1)).norm() <= R){
-		//	return true;
-		//}
-		//else if ((CPos - facet.GetPos(0)).norm() <= R){
-		//	return true;
-		//}
-		//else if (x[1] < 0.0f){
-		//	if (Intersect::Ray_Sphere(Ray(facet.GetPos(0), p), CPos, R, t)){
-		//		return true;
-		//	}
-		//}
-		//else if (x[2] < 0.0f){
-		//	if (Intersect::Ray_Sphere(Ray(facet.GetPos(0), q), CPos, R, t)){
-		//		return true;
-		//	}
-		//}
-		//else if (x[1] + x[2] < 1.0f){
-		//	if (Intersect::Ray_Sphere(Ray(facet.GetPos(1), facet.GetPos(2) - facet.GetPos(1)), CPos, R, t)){
-		//		return true;
-		//	}
+		//else{
+		//	return false;
 		//}
 
-		///*else if (x[1] <= 0.0f && x[2] >= 1.0f && abs(x[1]) + abs(x[2]) >= 1.0f && (CPos - facet.GetPos(2)).norm() <= R){
-		//return true;
-		//}
-		//else if (x[1] >= 1.0f && x[2] <= 0.0f && abs(x[1]) + abs(x[2]) >= 1.0f && (CPos - facet.GetPos(1)).norm() <= R){
-		//return true;
-		//}
-		//else if (x[1] <= 0.0f && x[2] <= 0.0f && abs(x[1]) + abs(x[2]) <= 1.0f && (CPos - facet.GetPos(0)).norm() <= R){
-		//return true;
-		//}*/
+
+		
+		PTUtility::Vec3 N = (0.3333 * (PL.m_V[0].m_Normal + PL.m_V[1].m_Normal + PL.m_V[2].m_Normal)).normalized();
+		PTUtility::Vec3 p = PL.m_V[1].m_Pos - PL.m_V[0].m_Pos;
+		PTUtility::Vec3 q = PL.m_V[2].m_Pos - PL.m_V[0].m_Pos;
+		PTUtility::Vec3 pq = s.m_Pos - PL.m_V[0].m_Pos;
+
+		float dd = 0;
+
+		float mat[3][3] = {
+			{ -N.x(), p.x(), q.x() },
+			{ -N.y(), p.y(), q.y() },
+			{ -N.z(), p.z(),  q.z() }
+		};
+
+		//float mat[3][3] = {
+		//	{ -N.x(), -N.y(), -N.z() },
+		//	{ p.x(), p.y(), p.z() },
+		//	{ q.x(), q.y(), q.z() }
+		//};
+		float det =
+			mat[0][0] * mat[1][1] * mat[2][2] + mat[1][0] * mat[2][1] * mat[0][2] + mat[2][0] * mat[0][1] * mat[1][2] -
+			mat[0][0] * mat[2][1] * mat[1][2] - mat[2][0] * mat[1][1] * mat[0][2] - mat[1][0] * mat[0][1] * mat[2][2];
+
+		if (abs(det) < 0.000001){
+			return false;
+		}
 
 
-		//return false;
+		float invmat[3][3] = {
+			{ mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1], mat[0][2] * mat[2][1] - mat[0][1] * mat[2][2], mat[0][1] * mat[1][2] - mat[0][2] * mat[1][1] },
+			{ mat[1][2] * mat[2][0] - mat[0][0] * mat[2][2], mat[0][0] * mat[2][2] - mat[0][2] * mat[2][1], mat[0][2] * mat[1][0] - mat[0][0] * mat[1][2] },
+			{ mat[1][0] * mat[2][1] - mat[1][1] * mat[2][1], mat[0][1] * mat[2][0] - mat[0][0] * mat[2][1], mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0] }
+		};
 
+		PTUtility::Vec3 x(0, 0, 0);
+		for (int i = 0; i < 3; i++){
+			for (int j = 0; j < 3; j++){
+				x[i] += invmat[i][j] * pq[j] / det;
+			}
+		}
+		
+		if (x[0] <= s.m_Radius && x[1] >= 0.0f && x[2] >= 0.0f && x[1] + x[2] <= 1.0f){
+			return true;
+		}
+		else if ((s.m_Pos - PL.m_V[2].m_Pos).norm() <= s.m_Radius){
+			return true;
+		}
+		else if ((s.m_Pos - PL.m_V[1].m_Pos).norm() <= s.m_Radius){
+			return true;
+		}
+		else if ((s.m_Pos - PL.m_V[0].m_Pos).norm() <= s.m_Radius){
+			return true;
+		}
+		else if (x[1] < 0.0f){
+			if (Intersect(Primitive::Ray(PL.m_V[0].m_Pos, p), Primitive::Sphere(s.m_Pos, s.m_Radius), dd)){
+				return true;
+			}
+		}
+		else if (x[2] < 0.0f){
+			if (Intersect(Primitive::Ray(PL.m_V[0].m_Pos, q), Primitive::Sphere(s.m_Pos, s.m_Radius), dd)){
+				return true;
+			}
+		}
+		else if (x[1] + x[2] < 1.0f){
+			if (Intersect(Primitive::Ray(PL.m_V[1].m_Pos, PL.m_V[2].m_Pos - PL.m_V[1].m_Pos), Primitive::Sphere(s.m_Pos, s.m_Radius), dd)){
+				return true;
+			}
+		}
+
+		else if (x[1] <= 0.0f && x[2] >= 1.0f && abs(x[1]) + abs(x[2]) >= 1.0f && (s.m_Pos - PL.m_V[2].m_Pos).norm() <= s.m_Radius){
+		return true;
+		}
+		else if (x[1] >= 1.0f && x[2] <= 0.0f && abs(x[1]) + abs(x[2]) >= 1.0f && (s.m_Pos - PL.m_V[1].m_Pos).norm() <= s.m_Radius){
+		return true;
+		}
+		else if (x[1] <= 0.0f && x[2] <= 0.0f && abs(x[1]) + abs(x[2]) <= 1.0f && (s.m_Pos - PL.m_V[0].m_Pos).norm() <= s.m_Radius){
+		return true;
+		}
 
 		return false;
 	}
 
+	template<>
+	bool Intersect(const Primitive::Polygon& PL, const Primitive::Sphere& s){
+		return Intersect(s, PL);
+	}
 
 	bool AABB_RAY_SIMD(
 		const __m256 value[2][3],
