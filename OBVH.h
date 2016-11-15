@@ -476,118 +476,6 @@ namespace mSec{
 
 	}
 
-	/*template<typename E>
-	int OBVH<E>::PGetElements(const PTUtility::Ray& ray, ::std::vector<RF>& Facets, int ID) const{
-
-	float u, v, t;
-	u = v = t = 0.0f;
-	if (m_NArray[ID]._NumChildren == 0){
-	int nc = m_NArray[ID]._facets.size();
-
-	for (int i = 0; i < nc; i++){
-	if (Intersect::Ray_Triangle(ray, *m_NArray[ID]._facets[i], u, v, t)){
-	if (t > FLT_MIN){
-	Facets.push_back(AbsG::RF(m_NArray[ID]._facets[i], u, v, t));
-	}
-	}
-	}
-	return Facets.size();
-	}
-
-	__m256 org[3];
-	__m256 idir[3];
-	int sign[3];
-	int mask = 0;
-
-	for (int i = 0; i < 3; i++){
-
-	sign[i] = ray.m_Dir[i] < 0;
-	org[i] = _mm256_set1_ps(ray.m_Org[i]);
-
-	if (abs(ray.m_Dir[i]) < 1.0f / 100000.0f){
-	idir[i] = _mm256_set1_ps(100000.0f - 200000.0f * sign[i]);
-	}
-	else{
-	idir[i] = _mm256_set1_ps(1.0f / ray.m_Dir[i]);
-	}
-
-	}
-
-
-	if (Intersect::IsHit(m_NArray[ID].CAABB, org, idir, sign, mask)){
-	for (int i = 0; i < 8; i++){
-	int fg = mask & (1 << (i));
-	if ((fg) > 0){
-	int iid = m_NArray[ID]._Children[i];
-	if (iid > 0){ PGetElements(ray, Facets, iid); }
-	}
-	}
-	}
-
-	return Facets.size();
-	}
-
-	template<typename E>
-	int OBVH<E>::GetElements(const PTUtility::Ray& ray, ::std::vector<RF>& Facets) const{
-
-	Facets.clear();
-
-	int n = PGetElements(ray, Facets, 1);
-	::std::sort(Facets.begin(), Facets.end());
-	return n;
-	}
-
-	template<typename E>
-	int OBVH<E>::PGetElements(const Vec3& Center, float R, ::std::vector<RF>& Facets, int ID) const{
-
-	float u, v, t;
-	u = v = t = 0.0f;
-	if (m_NArray[ID]._NumChildren == 0){
-	int nc = m_NArray[ID]._facets.size();
-
-	for (int i = 0; i < nc; i++){
-	if (Intersect::Sphere_Triangle(Center, R, *m_NArray[ID]._facets[i], u, v, t)){
-	Facets.push_back(AbsG::RF(m_NArray[ID]._facets[i], u, v, t));
-	}
-	}
-	return Facets.size();
-	}
-	else{
-
-	__m256 Pos[3];
-	__m256 Rd[1];
-
-	int mask = 0;
-
-	for (int i = 0; i < 3; i++){
-	Pos[i] = _mm256_set1_ps(Center[i]);
-	}
-	Rd[0] = _mm256_set1_ps(R);
-
-	if (Intersect::Sphere_AABB_Fast_S(Pos, Rd, m_NArray[ID].CAABB, mask)){
-	for (int i = 0; i < 8; i++){
-	int fg = mask & (1 << (i));
-	if ((fg) > 0){
-	int iid = m_NArray[ID]._Children[i];
-	if (iid > 0){ PGetElements(Center, R, Facets, iid); }
-	}
-	}
-	}
-
-	return Facets.size();
-
-	}
-
-
-	}
-
-	template<typename E>
-	int OBVH<E>::GetElements(const Vec3& Center, float R, ::std::vector<RF>& Facets){
-	Facets.clear();
-	int n = PGetElements(Center, R, Facets, 1);
-	::std::sort(Facets.begin(), Facets.end());
-	return n;
-	}*/
 
 	template<typename E>
 	float OBVH<E>::GetSceneWidth(){
@@ -621,6 +509,16 @@ namespace mSec{
 	}
 
 
+	
+
+	template<typename E>
+	int OBVH<E>::GetElementFromRay(const Primitive::Ray& ray, ::std::vector<IscData>& result)const{
+		result.clear();
+
+		int n = PGetElementFromRay(ray, result, 1);
+		::std::sort(result.begin(), result.end());
+		return n;
+	}
 	template<>
 	int OBVH<Primitive::Polygon>::GetElementFromRay(const Primitive::Ray& ray, ::std::vector<IscData>& result)const{
 		result.clear();
@@ -629,6 +527,8 @@ namespace mSec{
 		::std::sort(result.begin(), result.end());
 		return n;
 	}
+
+
 
 	template<>
 	int OBVH<Primitive::Polygon>::PGetElementFromRay(const Primitive::Ray& ray, ::std::vector<IscData>& result, int PID)const{
@@ -680,56 +580,36 @@ namespace mSec{
 
 		return result.size();
 	}
+	template<typename E>
+	int OBVH<E>::PGetElementFromRay(const Primitive::Ray& ray, ::std::vector<IscData>& result, int PID)const{
 
-	//template<typename E>
-	//int OBVH<E>::GetElements(const Primitive::Ray& ray, ::std::vector<IscData>& result) const{
+		if (m_NArray[PID]._NumChildren == 0){
 
-	//	result.clear();
+			for (int i = 0; i < m_NArray[PID]._Elements.size(); i++){
 
-	//	int n = PGetElements(ray, result, 1);
-	//	return n;
-	//}
+				E* vv = m_NArray[PID]._Elements[i];
+				float d = 0.0f;
+				if (Isc::Intersect(ray, *(vv), d)){
+					IscData isc(vv,d,0.0f,0.0f);
+					result.push_back(isc);
+				}
+			}
+			return result.size();
+		}
+		else{
 
-	//template<typename E>
-	//int OBVH<E>::PGetElement(const Primitive::Vec3& Center, float R, ::std::vector<IscData>& result, int PID) const{
+			const AABB* tab;
+			for (int i = 0; i < m_NArray[PID]._NumChildren; i++){
 
-	//	float u, v, t;
-	//	u = v = t = 0.0f;
-	//	if (m_NArray[ID]._NumChildren == 0){
-	//		int nc = m_NArray[ID]._facets.size();
+				if (Isc::Intersect(m_NArray[PID]._AABBs[i], ray)){
+					PGetElementFromRay(ray, result, m_NArray[PID]._Children[i]);
+				}
+			}
+			return result.size();
+		}
 
-	//		for (int i = 0; i < nc; i++){
-	//			if (Intersect::Sphere_Triangle(Center, R, *m_NArray[ID]._facets[i], u, v, t)){
-	//				Facets.push_back(AbsG::RF(m_NArray[ID]._facets[i], u, v, t));
-	//			}
-	//		}
-	//		return Facets.size();
-	//	}
-	//	else{
-
-	//		__m256 Pos[3];
-	//		__m256 Rd[1];
-
-	//		int mask = 0;
-
-	//		for (int i = 0; i < 3; i++){
-	//			Pos[i] = _mm256_set1_ps(Center[i]);
-	//		}
-	//		Rd[0] = _mm256_set1_ps(R);
-
-	//		if (Intersect::Sphere_AABB_Fast_S(Pos, Rd, m_NArray[ID].CAABB, mask)){
-	//			for (int i = 0; i < 8; i++){
-	//				int fg = mask & (1 << (i));
-	//				if ((fg) > 0){
-	//					int iid = m_NArray[ID]._Children[i];
-	//					if (iid > 0){ PGetElements(Center, R, Facets, iid); }
-	//				}
-	//			}
-	//		}
-
-	//		return Facets.size();
-
-	//}
+		return result.size();
+	}
 
 
 
@@ -754,7 +634,7 @@ namespace mSec{
 					result.push_back(*vv);
 				}
 			}
-			return Facets.size();
+			return result.size();
 		}
 		else{
 

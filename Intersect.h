@@ -204,6 +204,19 @@ namespace Primitive{
 				m_MinPos(i) = min(i) < ref.m_MinPos(i) ? min(i) : ref.m_MinPos(i);
 			}
 		}
+		template<>
+		void Expand<Sphere>(const Sphere& ref){
+			PTUtility::Vec3 max = ref.m_Pos + PTUtility::Vec3::Ones() * ref.m_Radius;
+			PTUtility::Vec3 min = ref.m_Pos - PTUtility::Vec3::Ones() * ref.m_Radius;
+
+
+			for (int i = 0; i < 3; i++){
+				m_MaxPos(i) = m_MaxPos(i) > max(i) ? m_MaxPos(i) : max(i);
+				m_MinPos(i) = m_MinPos(i) < min(i) ? m_MinPos(i) : min(i);
+			}
+		}
+
+
 
 		//–³Œø‰»‚·‚é
 		void Reset(){
@@ -540,7 +553,6 @@ namespace Isc{
 		}
 		return true;
 	}
-
 	template<>
 	bool Intersect(const Primitive::Vertex& v, const Primitive::AABB& aabb){
 		return Intersect(aabb, v);
@@ -551,16 +563,8 @@ namespace Isc{
 
 	template<>
 	bool Intersect(const Primitive::Sphere& s, const Primitive::Polygon& PL){
-		//if ((s.m_Pos - PL.GetCenter()).norm2() < s.m_Radius * s.m_Radius){
-		//	return true;
-		//}
-		//else{
-		//	return false;
-		//}
 
-
-		
-		PTUtility::Vec3 N = (0.3333 * (PL.m_V[0].m_Normal + PL.m_V[1].m_Normal + PL.m_V[2].m_Normal)).normalized();
+		PTUtility::Vec3 N = (0.333333 * (PL.m_V[0].m_Normal + PL.m_V[1].m_Normal + PL.m_V[2].m_Normal)).normalized();
 		PTUtility::Vec3 p = PL.m_V[1].m_Pos - PL.m_V[0].m_Pos;
 		PTUtility::Vec3 q = PL.m_V[2].m_Pos - PL.m_V[0].m_Pos;
 		PTUtility::Vec3 pq = s.m_Pos - PL.m_V[0].m_Pos;
@@ -573,11 +577,6 @@ namespace Isc{
 			{ -N.z(), p.z(),  q.z() }
 		};
 
-		//float mat[3][3] = {
-		//	{ -N.x(), -N.y(), -N.z() },
-		//	{ p.x(), p.y(), p.z() },
-		//	{ q.x(), q.y(), q.z() }
-		//};
 		float det =
 			mat[0][0] * mat[1][1] * mat[2][2] + mat[1][0] * mat[2][1] * mat[0][2] + mat[2][0] * mat[0][1] * mat[1][2] -
 			mat[0][0] * mat[2][1] * mat[1][2] - mat[2][0] * mat[1][1] * mat[0][2] - mat[1][0] * mat[0][1] * mat[2][2];
@@ -640,7 +639,6 @@ namespace Isc{
 
 		return false;
 	}
-
 	template<>
 	bool Intersect(const Primitive::Polygon& PL, const Primitive::Sphere& s){
 		return Intersect(s, PL);
