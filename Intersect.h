@@ -143,10 +143,10 @@ namespace Primitive{
 			return 0.500 * (m_MaxPos + m_MinPos);
 		}
 
-		//–³Œø‚ÈAABB‚ğ‚Â‚­‚é
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½AABBï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½
 		AABB() : m_MinPos(1000.001, 1000.001, 1000.001), m_MaxPos(-1000.001, -1000.001, -1000.001){}
 
-		//Å‘å‚ÆÅ¬ˆÊ’u‚ğw’è
+		//ï¿½Å‘ï¿½ï¿½ÆÅï¿½ï¿½Ê’uï¿½ï¿½ï¿½wï¿½ï¿½
 		AABB(const PTUtility::Vec3& max, const PTUtility::Vec3& min) : m_MinPos(min), m_MaxPos(max){}
 
 		~AABB(){}
@@ -165,7 +165,7 @@ namespace Primitive{
 			PTUtility::Vec3 p2(obj.m_V[1].m_Pos);
 			PTUtility::Vec3 p3(obj.m_V[2].m_Pos);
 
-			//‚æ‚­‚í‚©‚ç‚ñ‚ª‚½‚Ô‚ñH‚ ‚Á‚Ä‚é
+			//ï¿½æ‚­ï¿½í‚©ï¿½ï¿½ï¿½ñ‚ª‚ï¿½ï¿½Ô‚ï¿½ï¿½Hï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½
 			for (int i = 0; i < 3; i++){
 				max[i] = (p1(i) > p2(i) ? p1(i) : p2(i)) > p3(i) ? (p1(i) > p2(i) ? p1(i) : p2(i)) : p3(i);
 			}
@@ -218,7 +218,7 @@ namespace Primitive{
 
 
 
-		//–³Œø‰»‚·‚é
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		void Reset(){
 			m_MaxPos = PTUtility::Vec3(-1000.001, -1000.001, -1000.001);
 			m_MinPos = PTUtility::Vec3(1000.001, 1000.001, 1000.001);
@@ -236,7 +236,7 @@ namespace Primitive{
 			}
 		}
 
-		//•\–ÊÏ‚ğ“¾‚Ü‚·
+		//ï¿½\ï¿½ÊÏ‚ğ“¾‚Ü‚ï¿½
 		float GetArea()const{
 			PTUtility::Vec3 x = m_MaxPos - m_MinPos;
 			return abs(2.0f * (x(0)*x(1) + x(1)*x(2) + x(2)*x(0)));
@@ -587,9 +587,9 @@ namespace Isc{
 
 
 		float invmat[3][3] = {
-			{ mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1], mat[0][2] * mat[2][1] - mat[0][1] * mat[2][2], mat[0][1] * mat[1][2] - mat[0][2] * mat[1][1] },
-			{ mat[1][2] * mat[2][0] - mat[0][0] * mat[2][2], mat[0][0] * mat[2][2] - mat[0][2] * mat[2][1], mat[0][2] * mat[1][0] - mat[0][0] * mat[1][2] },
-			{ mat[1][0] * mat[2][1] - mat[1][1] * mat[2][1], mat[0][1] * mat[2][0] - mat[0][0] * mat[2][1], mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0] }
+			{ mat[1][1] * mat[2][2] - mat[0][2] * mat[2][1], mat[0][2] * mat[2][1] - mat[0][1] * mat[2][2], mat[0][1] * mat[1][2] - mat[0][2] * mat[1][1] },
+			{ mat[1][2] * mat[2][0] - mat[1][0] * mat[2][2], mat[0][0] * mat[2][2] - mat[0][2] * mat[2][0], mat[0][2] * mat[1][0] - mat[0][0] * mat[1][2] },
+			{ mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0], mat[0][1] * mat[2][0] - mat[0][0] * mat[2][1], mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0] }
 		};
 
 		PTUtility::Vec3 x(0, 0, 0);
