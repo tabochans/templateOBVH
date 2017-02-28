@@ -3,4 +3,5 @@
 *.exe
 x64/
 templateOBVH/x64/
-.sdf
+*.sdf
+*.gitignore
